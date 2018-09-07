@@ -1,33 +1,35 @@
 'use strict';
 
-var gulp = require('gulp');
-var del = require('del');
-var newer = require('gulp-newer');
-var runSequence = require('run-sequence');
-var sass = require('gulp-sass');
-var rename = require('gulp-rename');
-var concat = require('gulp-concat');
-var sourcemaps = require('gulp-sourcemaps');
-var postcss = require('gulp-postcss');
-var postcssFlexbugsFixes = require('postcss-flexbugs-fixes');
-var postcssNthChildFix = require('postcss-nth-child-fix');
-var autoprefixer = require('autoprefixer');
-var cssnano = require('gulp-cssnano');
-var cssDeclarationSorter = require('css-declaration-sorter');
-var imagemin = require('gulp-imagemin');
-var imageminMozjpeg = require('imagemin-mozjpeg');
-var imageminZopfli = require('imagemin-zopfli');
-var imageminPngquant = require('imagemin-pngquant');
-var webp = require('gulp-webp');
-var sassLint = require('gulp-sass-lint');
-var php2html = require('gulp-php2html');
-var prettify = require('gulp-html-prettify');
-var uglify = require('gulp-uglify');
-var babel = require('gulp-babel');
-var eslint = require('gulp-eslint');
+const gulp = require('gulp');
+const glob = require('glob');
+const del = require('del');
+const newer = require('gulp-newer');
+const runSequence = require('run-sequence');
+const sass = require('gulp-sass');
+const rename = require('gulp-rename');
+const concat = require('gulp-concat');
+const sourcemaps = require('gulp-sourcemaps');
+const postcss = require('gulp-postcss');
+const postcssFlexbugsFixes = require('postcss-flexbugs-fixes');
+const postcssNthChildFix = require('postcss-nth-child-fix');
+const autoprefixer = require('autoprefixer');
+const cssnano = require('gulp-cssnano');
+const cssDeclarationSorter = require('css-declaration-sorter');
+const imagemin = require('gulp-imagemin');
+const imageminMozjpeg = require('imagemin-mozjpeg');
+const imageminZopfli = require('imagemin-zopfli');
+const imageminPngquant = require('imagemin-pngquant');
+const webp = require('gulp-webp');
+const sassLint = require('gulp-sass-lint');
+const php2html = require('gulp-php2html');
+const prettify = require('gulp-html-prettify');
+const uglify = require('gulp-uglify');
+const babel = require('gulp-babel');
+const eslint = require('gulp-eslint');
+const svgSprite = require('gulp-svg-sprite');
 
 
-var config = {
+const config = {
     scss: {
         input: './app/scss/main.scss',
         output: './dist/css',
@@ -168,7 +170,10 @@ var config = {
     },
     html: {
         input: './app/index*.php',
-        watch: ['./app/*.php', './app/**/*.php'],
+        watch: [
+            './app/*.php',
+            './app/**/*.php'
+        ],
         output: './dist/',
         outputFiles: './dist/index*.html',
         prettify: {
@@ -182,14 +187,14 @@ var config = {
     HTML
  */
 
-gulp.task('html-build', ['html-clean'], function () {
+gulp.task('html-build', ['html-clean'], () => {
     return gulp.src(config.html.input)
         .pipe(php2html())
         .pipe(prettify(config.html.prettify))
         .pipe(gulp.dest(config.html.output));
 });
 
-gulp.task('html-clean', function () {
+gulp.task('html-clean', () => {
     return del('./dist/*.html');
 });
 
@@ -197,14 +202,14 @@ gulp.task('html-clean', function () {
     SCSS
 */
 
-gulp.task('scss-lint', function () {
+gulp.task('scss-lint', () => {
     return gulp.src(config.scss.linter.input)
         .pipe(sassLint(config.scss.linter.config))
         .pipe(sassLint.format());
 
 });
 
-gulp.task('css-compile', ['scss-lint'], function () {
+gulp.task('css-compile', ['scss-lint'], () => {
     return gulp.src(config.scss.input)
         .pipe(sourcemaps.init())
         .pipe(sass().on('error', sass.logError))
@@ -218,7 +223,7 @@ gulp.task('css-compile', ['scss-lint'], function () {
         .pipe(gulp.dest(config.scss.output));
 });
 
-gulp.task('css-build', ['css-compile'], function () {
+gulp.task('css-build', ['css-compile'], () => {
     return gulp.src(config.scss.output + '/main.css')
         .pipe(cssnano(config.cssnano))
         .pipe(rename('main.min.css'))
@@ -230,13 +235,13 @@ gulp.task('css-build', ['css-compile'], function () {
     JS
  */
 
-gulp.task('js-lint', function () {
+gulp.task('js-lint', () => {
     return gulp.src(config.js.eslint.input)
         .pipe(eslint({config: './eslintrc.json'}))
         .pipe(eslint.format());
 });
 
-gulp.task('js-build', ['js-lint'], function () {
+gulp.task('js-build', ['js-lint'], () => {
     return gulp.src(config.js.input)
         .pipe(sourcemaps.init())
         .pipe(concat(config.js.outputName))
@@ -260,11 +265,11 @@ gulp.task('js-minify', ['js-build'], function(){
     Images
 */
 
-gulp.task('images-clean', function () {
+gulp.task('images-clean', () => {
     return del(config.images.output);
 });
 
-gulp.task('images-minify', function () {
+gulp.task('images-minify', () => {
     return gulp.src(config.images.input)
         .pipe(newer(config.images.output))
         .pipe(imagemin(config.images.pluginsConfig, {
@@ -273,7 +278,7 @@ gulp.task('images-minify', function () {
         .pipe(gulp.dest(config.images.output));
 });
 
-gulp.task('images-webp', function () {
+gulp.task('images-webp', () => {
     return gulp.src(config.images.inputWebp)
         .pipe(webp({
             lossless: true
@@ -281,17 +286,52 @@ gulp.task('images-webp', function () {
         .pipe(gulp.dest(config.images.output));
 });
 
-gulp.task('favicon-files', function () {
+gulp.task('favicon-files', () => {
     return gulp.src(config.images.faviconFiles)
         .pipe(newer(config.images.faviconFilesOutput))
         .pipe(gulp.dest(config.images.faviconFilesOutput));
 });
 
+gulp.task('svg-sprites', ()=> {
+    glob(config.images.input + '/svg/sprite-*', null, function (er, dirs) {
+        if (er) {
+            console.log(er);
+            return;
+        }
+        dirs.forEach(function (dir) {
+            const spriteName = dir
+                .split('/')
+                .pop()
+                .replace('sprite-', '');
+            gulp.src(dir + '/**/*.svg')
+                .pipe(svgSprite(makeSvgSpriteOptions(spriteName)))
+                .pipe(gulp.dest(config.images.output + '/svg'))
+        });
+    });
+});
+
+function makeSvgSpriteOptions(name) {
+    return {
+        mode: {
+            symbol: {
+                dest: '.',
+                sprite: name + '.svg'
+            }
+        },
+        shape: {
+            id: {
+                separator: '-'
+            },
+            transform: ['svgo']
+        }
+    }
+}
+
 /*
     Fonts
  */
 
-gulp.task('font-files', function () {
+gulp.task('font-files', () => {
     return gulp.src(config.fonts.input)
         .pipe(gulp.dest(config.fonts.output));
 });
@@ -300,7 +340,7 @@ gulp.task('font-files', function () {
     Movies
  */
 
-gulp.task('movie-files', function () {
+gulp.task('movie-files', () => {
     return gulp.src(config.movies.input)
         .pipe(gulp.dest(config.movies.output));
 });
@@ -309,7 +349,7 @@ gulp.task('movie-files', function () {
     Main tasks
 */
 
-gulp.task('build', function () {
+gulp.task('build', () => {
     runSequence(
         'images-clean',
         [
@@ -325,7 +365,7 @@ gulp.task('build', function () {
     )
 });
 
-gulp.task('watch', ['build'], function () {
+gulp.task('watch', ['build'], () => {
     gulp.watch(config.scss.watch, ['css-build']);
     gulp.watch(config.images.input, ['images-minify', 'images-webp']);
     gulp.watch(config.images.faviconFiles, ['favicon-files']);
