@@ -317,7 +317,6 @@ gulp.task('build', function () {
             'movie-files',
             'favicon-files',
             'images-minify',
-            'images-webp',
             'css-build',
             'html-build',
             'js-minify'
@@ -327,7 +326,7 @@ gulp.task('build', function () {
 
 gulp.task('watch', ['build'], function () {
     gulp.watch(config.scss.watch, ['css-build']);
-    gulp.watch(config.images.input, ['images-minify', 'images-webp']);
+    gulp.watch(config.images.input, ['images-minify']);
     gulp.watch(config.images.faviconFiles, ['favicon-files']);
     gulp.watch(config.movies.input, ['movie-files']);
     gulp.watch(config.fonts.input, ['font-files']);
